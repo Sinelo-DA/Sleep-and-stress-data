@@ -1,0 +1,80 @@
+---
+title: "Ecomm data, amazon"
+output: html_document
+---
+Research question:
+Is the average conversion rate significantly different among customers reached through various marketing channelseg Email, social media, paid ads
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+```
+```{r}
+df=digital_marketing_campaign_dataset_csv
+```
+```{r}
+sum(duplicated(df))
+```
+```{r}
+summary(df)
+```
+#checking for missing values per colomn
+```{r}
+colSums(is.na(df))
+```
+#Dropping missing values
+```{r}
+df=na.omit(df)
+```
+
+#convert categorical cols to factor
+```{r}
+df$CampaignChannel= as.factor(df$CampaignChannel)
+df$Gender= as.factor(df$Gender)
+```
+#ensure  numeric cols are numeric
+```{r}
+df$ConversionRate= as.numeric(df$ConversionRate)
+df$Age= as.numeric(df$Age)
+df$Income= as.numeric(df$Income)
+df$ClickThroughRate= as.numeric(df$ClickThroughRate)
+df$AdSpend= as.numeric(df$AdSpend)
+```
+#run a one way anova
+```{r}
+model= aov(ConversionRate ~ CampaignChannel,data= df)
+summary(model)
+```
+#visiualise conversion area
+```{r}
+ggplot(df, aes(x= CampaignChannel, y= ConversionRate))+
+   geom_boxplot(fill= "darkgreen")+
+  labs(title = "Conversion rate by marketing channel", y= "conversion rate", x="Campaign channel")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+```{r}
+ggplot(df, aes(sample = ConversionRate))+
+  stat_qq()+stat_qq_line()+
+  facet_wrap(~CampaignChannel, scales= "free")
+
+```
+```{r}
+library(car)
+#install car
+leveneTest(ConversionRate ~CampaignChannel, data= df)
+```
+#Games Howell post hoc test
+
+```{r}
+library(rstatix)
+library(ggpubr)
+
+games_result = df %>%
+  games_howell_test(ConversionRate~ CampaignChannel)
+print(games_result)
+```
+
+
+
